@@ -8,13 +8,20 @@ where T : IPoolClient // le type de T doit avoir implementer IPoolClint
     private GameObject anchor;
     private GameObject prefab;
     private Queue<T> queue = new();
+    private int batch;
 
-    public Pool(GameObject anchor, GameObject prefab, int n)
+    public Pool(GameObject anchor, GameObject prefab, int batch)
     {
         this.anchor = anchor;
         this.prefab = prefab;
+        this.batch = batch;
 
-        for (int _ = 0; _ < n; _++)
+        CreateBatch();
+    }
+
+    private void CreateBatch()
+    {
+        for (int _ = 0; _ < batch; _++)
         {
             GameObject go = GameObject.Instantiate(prefab);
             if (go.TryGetComponent(out T client))
@@ -36,6 +43,8 @@ where T : IPoolClient // le type de T doit avoir implementer IPoolClint
 
     public T Get()
     {
+        if (queue.Count == 0) CreateBatch();
+        
         T client = queue.Dequeue();
         client.Arise(anchor.transform.position, anchor.transform.rotation);
         return client;
